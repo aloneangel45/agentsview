@@ -522,9 +522,6 @@ type messageBodyCursor struct {
 	Offset         int      `json:"p"`
 	NextFrom       *int     `json:"n,omitempty"`
 	Roles          []string `json:"l,omitempty"`
-	Kind           string   `json:"k,omitempty"`
-	Position       int      `json:"c,omitempty"`
-	Total          int      `json:"t,omitempty"`
 }
 
 func encodeMessageBodyCursor(cursor messageBodyCursor) string {
@@ -538,7 +535,7 @@ func decodeMessageBodyCursor(raw string) (messageBodyCursor, error) {
 		return messageBodyCursor{}, errors.New("invalid body_cursor")
 	}
 	var cursor messageBodyCursor
-	if err := json.Unmarshal(payload, &cursor); err != nil || cursor.Version != 3 ||
+	if err := json.Unmarshal(payload, &cursor); err != nil || cursor.Version != 2 ||
 		cursor.EvidenceSource == "" || cursor.SessionID == "" || cursor.Revision == "" ||
 		cursor.Ordinal < 0 || cursor.Offset <= 0 {
 		return messageBodyCursor{}, errors.New("invalid body_cursor")
@@ -705,7 +702,7 @@ func attachBodyCursors(
 		}
 		hasBodyCursor = true
 		out.Messages[i].BodyCursor = encodeMessageBodyCursor(messageBodyCursor{
-			Version: 3, EvidenceSource: evidenceSource, SessionID: sessionID,
+			Version: 2, EvidenceSource: evidenceSource, SessionID: sessionID,
 			Revision: out.TranscriptRevision, Ordinal: out.Messages[i].Ordinal,
 			Offset: utf8.RuneCountInString(out.Messages[i].Content), NextFrom: nextFrom,
 			Roles: roles,
@@ -726,9 +723,6 @@ func (t *toolset) getMessageBodyContinuation(
 	cursor, err := decodeMessageBodyCursor(in.BodyCursor)
 	if err != nil {
 		return nil, getMessagesOut{}, err
-	}
-	if cursor.Kind != "" {
-		return nil, getMessagesOut{}, errors.New("invalid body_cursor")
 	}
 	if cursor.SessionID != in.SessionID ||
 		(in.ExpectedRevision != "" && in.ExpectedRevision != cursor.Revision) {
