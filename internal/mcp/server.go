@@ -222,24 +222,14 @@ func newServer(opts ServeOptions) *mcp.Server {
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name: ToolSearchContent,
-		Description: "Search raw session text, including thinking, tool inputs, and results. " +
-			"Prefer mode hybrid (semantic similarity plus keywords) for finding " +
-			"prior work and answering contextual questions, especially when the exact wording is unknown. " +
-			"Hybrid returns keyword matches with effective_mode hybrid_keyword and a note when search by meaning is unavailable. " +
-			"Use terms when every literal term must occur within one " +
-			"user/assistant exchange, or fully quoted substring text or regex for exact error messages, identifiers, and code fragments. " +
-			"Use concepts with two to five semantic ideas to keep only sessions with evidence for every idea. " +
-			"The default mode remains substring. On SQLite, PostgreSQL, and ClickHouse, a substring search of several words lists exact text first, " +
-			"then messages holding every word, then those holding more of the words, and reports matched_words. Scope defaults to all, including child sessions and sidechain messages; " +
-			"top excludes them and subordinate returns only them. Child sessions bypass the one-shot exclusion. " +
-			"The response reports effective_scope and exclusions.children. Set context to include N messages of " +
-			"surrounding conversation with each match. Matches from the last 10 minutes (including the " +
-			"current conversation) are excluded unless include_active is set; current_session_id replaces " +
-			"that heuristic with one exact exclusion. One-shot and automated " +
-			"sessions are excluded by default; set include_one_shot or include_automated to include them. " +
-			"Pattern searches report total matches; total_capped means at least that many. " +
-			"For semantic and hybrid searches, total is the ranked page count and is always a lower bound. " +
-			"Empty first pages return measured hints with code, message, and retry_with arguments; preserve other arguments when retrying.",
+		Description: "Search session text, thinking, and tool inputs and results. Prefer hybrid for contextual questions; " +
+			"it falls back to keywords when semantic search is unavailable. Use terms for words in one exchange, " +
+			"quoted substring or regex for exact text, and concepts for evidence of each idea in a session. " +
+			"Substring is the default; multiword searches rank exact text first, then word matches. " +
+			"Scope defaults to all, including children and sidechains; top excludes them, subordinate selects them. " +
+			"Child sessions bypass the one-shot exclusion. Active, one-shot, and automated sessions are excluded by default. " +
+			"total_capped means at least total matches; semantic and hybrid totals count the ranked page. " +
+			"Use page_cursor to continue without recounting. Empty first pages can return hints with retry_with arguments.",
 		Annotations: externalRead,
 	}, t.searchContent)
 
